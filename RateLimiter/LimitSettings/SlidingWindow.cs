@@ -1,5 +1,4 @@
-﻿
-namespace RateLimiter
+﻿namespace RateLimiter.LimitSettings
 {
     public class SlidingWindow : ILimit
     {

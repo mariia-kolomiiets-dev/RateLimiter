@@ -1,4 +1,6 @@
-﻿namespace RateLimiter
+﻿using RateLimiter.LimitSettings;
+
+namespace RateLimiter
 {
     public class RateLimiter<TArg>
     {

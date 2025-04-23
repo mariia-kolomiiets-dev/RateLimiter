@@ -1,4 +1,5 @@
 ﻿using RateLimiter;
+using RateLimiter.LimitSettings;
 
 namespace RateLimiterTests
 {

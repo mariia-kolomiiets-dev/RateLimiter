@@ -1,4 +1,4 @@
-﻿namespace RateLimiter
+﻿namespace RateLimiter.LimitSettings
 {
     public interface ILimit
     {
