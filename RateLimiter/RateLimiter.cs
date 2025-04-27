@@ -11,41 +11,61 @@ namespace RateLimiter
 
         public async Task PerformAsync(TArg argument)
         {
-            await semaphore.WaitAsync();
-
-            var now = DateTime.UtcNow;
-            var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
-
-            if (limitsExceed is not null && limitsExceed.Any())
+            try
             {
-                var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
-                await Task.Delay(waitTime);
-                limitsExceed.ToList().ForEach(l => l.Reset());
+                await semaphore.WaitAsync();
+
+                var now = DateTime.UtcNow;
+                var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
+
+                if (limitsExceed is not null && limitsExceed.Any())
+                {
+                    var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
+                    await Task.Delay(waitTime);
+                    limitsExceed.ToList().ForEach(l => l.Reset());
+                }
+
+                limits.ForEach(l => l.Update(now));
+            }
+            catch (Exception)
+            {
+
+            }
+            finally
+            {
+                semaphore.Release();
             }
 
             await action(argument);
-            limits.ForEach(l => l.Update(now));
-
-            semaphore.Release();
         }
 
         public void Perform(TArg argument)
         {
-            semaphore.Wait();
-            var now = DateTime.UtcNow;
-            var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
-
-            if (limitsExceed is not null && limitsExceed.Any())
+            try
             {
-                var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
-                Thread.Sleep(waitTime);
-                limitsExceed.ToList().ForEach(l => l.Reset());
+                semaphore.Wait();
+                var now = DateTime.UtcNow;
+                var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
+
+                if (limitsExceed is not null && limitsExceed.Any())
+                {
+                    var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
+                    Thread.Sleep(waitTime);
+                    limitsExceed.ToList().ForEach(l => l.Reset());
+                }
+
+                limits.ForEach(l => l.Update(now));
+            }
+            catch (Exception)
+            {
+
+            }
+            finally
+            {
+                semaphore.Release();
             }
 
             action(argument).Wait();
-            limits.ForEach(l => l.Update(now));
-
-            semaphore.Release();
         }
     }
 }
