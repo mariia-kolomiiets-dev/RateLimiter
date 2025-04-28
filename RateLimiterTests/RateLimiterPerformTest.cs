@@ -18,7 +18,7 @@ namespace RateLimiterTests
                 await Task.Delay(100);
             };
 
-            RateLimiter<string> rateLimiter = new RateLimiter<string> { action = apiFunc, limits = [limitSetting1, limitSetting2, limitSetting3] };
+            RateLimiter<string> rateLimiter = new RateLimiter<string> { Action = apiFunc, Limits = [limitSetting1, limitSetting2, limitSetting3] };
             var tasks = Enumerable.Range(1, 10).Select(i => rateLimiter.PerformAsync(i.ToString())).ToList();
 
             await Task.WhenAll(tasks);
@@ -40,7 +40,7 @@ namespace RateLimiterTests
                 return Task.FromResult("");
             };
 
-            RateLimiter<string> rateLimiter = new RateLimiter<string> { action = apiFunc, limits = [limitSetting1, limitSetting2, limitSetting3] };
+            RateLimiter<string> rateLimiter = new RateLimiter<string> { Action = apiFunc, Limits = [limitSetting1, limitSetting2, limitSetting3] };
             var threads = Enumerable.Range(1, 10).Select(i => new Thread(() => rateLimiter.Perform(i.ToString()))).ToList();
             threads.ForEach(t => t.Start());
 

@@ -4,8 +4,8 @@ namespace RateLimiter
 {
     public class RateLimiter<TArg>
     {
-        public required Func<TArg, Task> action { get; set; }
-        public required List<ILimit> limits { get; set; }
+        public required Func<TArg, Task> Action { get; set; }
+        public required List<ILimit> Limits { get; set; }
 
         private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
@@ -14,18 +14,17 @@ namespace RateLimiter
             try
             {
                 await semaphore.WaitAsync();
-
                 var now = DateTime.UtcNow;
-                var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
+                var limitsExceed = Limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
 
                 if (limitsExceed is not null && limitsExceed.Any())
                 {
                     var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
                     await Task.Delay(waitTime);
-                    limitsExceed.ToList().ForEach(l => l.Reset());
+                    now = DateTime.UtcNow;
                 }
 
-                limits.ForEach(l => l.Update(now));
+                Limits.ForEach(l => l.Update(now));
             }
             catch (Exception)
             {
@@ -36,7 +35,7 @@ namespace RateLimiter
                 semaphore.Release();
             }
 
-            await action(argument);
+            await Action(argument);
         }
 
         public void Perform(TArg argument)
@@ -45,16 +44,16 @@ namespace RateLimiter
             {
                 semaphore.Wait();
                 var now = DateTime.UtcNow;
-                var limitsExceed = limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
+                var limitsExceed = Limits.FindAll(l => l.Exceeds(now)).OrderBy(li => li.Window);
 
                 if (limitsExceed is not null && limitsExceed.Any())
                 {
                     var waitTime = limitsExceed.FirstOrDefault()!.GetRemainingTime(now);
                     Thread.Sleep(waitTime);
-                    limitsExceed.ToList().ForEach(l => l.Reset());
+                    now = DateTime.UtcNow;
                 }
 
-                limits.ForEach(l => l.Update(now));
+                Limits.ForEach(l => l.Update(now));
             }
             catch (Exception)
             {
@@ -65,7 +64,7 @@ namespace RateLimiter
                 semaphore.Release();
             }
 
-            action(argument).Wait();
+            Action(argument).Wait();
         }
     }
 }

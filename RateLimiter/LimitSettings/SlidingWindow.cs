@@ -4,28 +4,29 @@
     {
         public TimeSpan Window { get; set; }
         public int MaxRepeats { get; set; }
-        private DateTime LastCall { get; set; } = DateTime.UtcNow;
-        private int Repeats { get; set; } = 0;
+        private readonly Queue<DateTime> CallHistory = new Queue<DateTime>();
 
         public bool Exceeds(DateTime currentTime)
         {
-            return currentTime - LastCall < Window && Repeats >= MaxRepeats;
+            return CallHistory.Count > 0 &&
+                    currentTime - CallHistory.Peek() < Window &&
+                    CallHistory.Count >= MaxRepeats;
         }
 
         public TimeSpan GetRemainingTime(DateTime currentTime)
         {
-            return Window - (currentTime - LastCall);
+            if (CallHistory.Count == 0)
+                return TimeSpan.Zero;
+
+            return Window - (currentTime - CallHistory.Peek());
         }
 
         public void Update(DateTime currentTime)
         {
-            Repeats++;
-            LastCall = currentTime;
-        }
+            while (CallHistory.Count > 0 && CallHistory.Peek() <= currentTime - Window)
+                CallHistory.Dequeue();
 
-        public void Reset()
-        {
-            Repeats = 0;
+            CallHistory.Enqueue(currentTime);
         }
     }
 }
